@@ -51,6 +51,10 @@ class GTTSPlayer(TTSProcessPlayer):
                 # skip languages we don't understand
                 if not std_code:
                     continue
+                
+            # Special case for en_GB -> en_US
+            if std_code == "en_US":
+                std_code = "en_GB"
 
             # add the voice using the name "gtts"
             voices.append(GTTSVoice(name="gTTS", lang=std_code, gtts_lang=code))
