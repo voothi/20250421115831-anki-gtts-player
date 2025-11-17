@@ -129,7 +129,7 @@ Create a `config.json` file in the add-on's directory (`addons21/391644525`) wit
 ## Related Projects
 
 -   [**Piper TTS Command-Line Utility**](https://github.com/voothi/20241206010110-piper-tts): The local TTS engine that this add-on depends on for its offline functionality.
--   [**No TTS Player for Anki**](https://github.com/voothi/20250902105308-anki-no-tts/): A companion add-on for users who want to globally disable TTS playback instead of enhancing it.
+-   [**No TTS Player for Anki**](https://github.com/voothi/20250902105308-anki-no-tts/): A companion add-on to temporarily or permanently silence all TTS fields (`{{tts...}}`) without needing to edit card templates.
 
 [Back to Top](#table-of-contents)
 
