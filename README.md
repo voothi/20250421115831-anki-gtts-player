@@ -2,7 +2,7 @@
 
 An enhanced Anki add-on that provides Text-to-Speech (TTS) functionality with a seamless offline fallback, ensuring your study flow is never interrupted.
 
-[![Version](https://img.shields.io/badge/version-v2.3.2--mod-blue)](https://github.com/voothi/20250421115831-anki-gtts-player) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Version](https://img.shields.io/badge/version-v1.44.8-blue)](https://github.com/voothi/20250421115831-anki-gtts-player) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 > **Note:** This is a modified fork of the official **gTTS Player** add-on. The original source code (as of November 17, 2025) can be found in the [official Anki Add-ons repository](https://github.com/ankitects/anki-addons/tree/main/code/gtts_player) and on [AnkiWeb](https://ankiweb.net/shared/info/391644525).
 
