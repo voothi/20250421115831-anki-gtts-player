@@ -34,6 +34,7 @@ The primary goal of this enhancement is to create a self-sufficient study enviro
 -   **Online & Offline Modes**: Utilizes Google's high-quality gTTS service online and seamlessly falls back to a local Piper TTS engine offline.
 -   **Automatic Fallback**: If gTTS fails or times out, Piper is used automatically. No broken audio, no interruptions.
 -   **On-the-Fly Engine Switching**: Instantly switch between `gTTS` and `Piper` as the primary engine from the `Tools` menu in Anki **without restarting**.
+-   **English Voice Correction**: Includes a fix for the original add-on's handling of English accents, ensuring British English (`en_GB`) is correctly mapped and available for use.
 -   **Configurable Timeout**: Prevents Anki from freezing by setting a custom timeout for web requests.
 -   **No Template Changes Required**: Works out-of-the-box with your existing card templates that use the standard `{{tts...}}` syntax.
 
