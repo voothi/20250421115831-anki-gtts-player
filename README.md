@@ -2,9 +2,11 @@
 
 An enhanced Anki add-on that provides Text-to-Speech (TTS) functionality with a seamless offline fallback, ensuring your study flow is never interrupted.
 
-[![Version](https://img.shields.io/badge/version-v2.0--mod-blue)](https://github.com/voothi/20250421115831-anki-gtts-player) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Version](https://img.shields.io/badge/version-v2.3.2--mod-blue)](https://github.com/voothi/20250421115831-anki-gtts-player) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-This add-on modifies the standard gTTS player to be more resilient and versatile. It uses Google's Text-to-Speech service when online but automatically switches to a local, high-quality Piper TTS engine when an internet connection is unavailable or slow.
+> **Note:** This is a modified fork of the official **gTTS Player** add-on. The original source code (as of November 17, 2025) can be found in the [official Anki Add-ons repository](https://github.com/ankitects/anki-addons/tree/main/code/gtts_player) and on [AnkiWeb](https://ankiweb.net/shared/info/391644525).
+
+This enhanced version uses Google's Text-to-Speech service when online but automatically switches to a local, high-quality Piper TTS engine when an internet connection is unavailable or slow.
 
 This project is part of the **[Kardenwort](https://github.com/kardenwort)** environment, designed to create a focused and efficient learning ecosystem.
 
@@ -57,25 +59,52 @@ The add-on intercepts Anki's default TTS requests and uses one of two modes:
 
 ## Installation
 
-1.  **Install the Add-on**:
-    -   Clone this repository into your Anki `addons21` folder.
-    -   The folder name **must be** `391644525`.
+You need to manually place the add-on's code into Anki's `addons21` folder.
 
-2.  **Set up Piper TTS**:
-    -   Follow the installation instructions in the [Piper TTS Utility repository](https://github.com/voothi/20241206010110-piper-tts).
+**Step 1: Get the Add-on Code**
 
-3.  **Configure the Add-on**:
-    -   Open the add-on folder (`addons21/391644525`).
-    -   Create a file named `config.json` using the template below.
-    -   **You must update the paths** in `config.json` to point to your Python executable and `piper_tts.py` script.
+You can either clone the repository using Git or download it as a ZIP file.
 
-4.  **Restart Anki**.
+-   **Method A: Git Clone** (Recommended for easier updates)
+    ```bash
+    # This command clones the repository directly into a folder named '391644525'
+    git clone https://github.com/voothi/20250421115831-anki-gtts-player.git 391644525
+    ```
+-   **Method B: Download ZIP**
+    1.  Click the `Code` button on this repository's page, then `Download ZIP`.
+    2.  Extract the ZIP file.
+    3.  Rename the extracted folder (e.g., `20250421115831-anki-gtts-player-main`) to `391644525`.
+
+**Step 2: Locate your Anki `addons21` Folder**
+
+You can find this folder in Anki by going to `Tools > Add-ons > View Files`. Typical locations are:
+-   **Windows**: `C:\Users\%USERNAME%\AppData\Roaming\Anki2\addons21`
+-   **macOS**: `~/Library/Application Support/Anki2/addons21`
+-   **Linux**: `~/.local/share/Anki2/addons21`
+
+**Step 3: Install the Add-on**
+
+Move the folder named `391644525` (from Step 1) into the `addons21` directory.
+
+**Step 4: Set up the Piper TTS Utility**
+
+Follow the installation instructions in the [Piper TTS Utility repository](https://github.com/voothi/20241206010110-piper-tts).
+
+**Step 5: Configure This Add-on**
+
+1.  Inside the new `391644525` folder, create a file named `config.json`.
+2.  Copy the content from the **Configuration** section below into this file.
+3.  **Crucially, update the paths** in `config.json` to point to your Python executable and the `piper_tts.py` script.
+
+**Step 6: Restart Anki**
+
+Close and reopen Anki for the changes to take effect.
 
 [Back to Top](#table-of-contents)
 
 ## Configuration
 
-Create a `config.json` file in the add-on's directory (`391644525`) with the following content.
+Create a `config.json` file in the add-on's directory (`addons21/391644525`) with the following content.
 
 ```json
 {
