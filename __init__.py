@@ -66,7 +66,7 @@ def run_piper_tts(text: str, lang: str, output_path: str) -> bool:
         "--output-file", output_path
     ]
 
-    try
+    try:
         creation_flags = subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0
         process = subprocess.run(
             command,
@@ -199,7 +199,7 @@ class GTTSPlayer(TTSProcessPlayer):
     # this is called on the main thread, after _play finishes
     def _on_done(self, ret: Future, cb: OnDoneCallback) -> None:
         # check if _play failed to produce a file
-        if not self._tmpfile:
+        if not hasattr(self, "_tmpfile") or not self._tmpfile:
             cb()
             return
         
