@@ -52,7 +52,6 @@ def run_piper_tts(text: str, lang: str, output_path: str) -> bool:
         print(f"Piper TTS: Path does not exist. Python: '{python_exe}', Script: '{script_path}'")
         return False
 
-    # The piper_tts.py script expects a 2-letter lang code
     if "_" in lang:
         lang_code = lang.split("_")[0]
     else:
@@ -124,7 +123,6 @@ def run_gtts_with_timeout(text: str, lang: str, slow: bool, output_path: str) ->
         print(f"gTTS general error: {e}")
         return False
 
-# we subclass the default voice object to store the gtts language code
 @dataclass
 class GTTSVoice(TTSVoice):
     gtts_lang: str
@@ -147,7 +145,6 @@ class GTTSPlayer(TTSProcessPlayer):
             voices.append(GTTSVoice(name="gTTS", lang=std_code, gtts_lang=code))
         return voices  # type: ignore
 
-    # this is called on a background thread, and will not block the UI
     def _play(self, tag: AVTag) -> None:
         assert isinstance(tag, TTSTag)
         match = self.voice_for_tag(tag)
@@ -160,45 +157,46 @@ class GTTSPlayer(TTSProcessPlayer):
         conf = get_config()
         engine = conf.get("tts_engine", "gTTS")
         
-        # Use a base filename for both engines to share caching logic
         base_filename = self.temp_file_for_tag_and_voice(tag, match.voice)
-        gtts_tmpfile = f"{base_filename}.mp3"
-        piper_tmpfile = f"{base_filename}.wav"
+        
+        # The canonical cache file is ALWAYS the gTTS MP3
+        gtts_cache_file = f"{base_filename}.mp3"
+        # The Piper file is always temporary and uses a different name to avoid cache conflicts
+        piper_temp_file = f"{base_filename}.wav"
 
-        # Default to no file
         self._tmpfile = None
 
         def try_gtts():
-            if os.path.exists(gtts_tmpfile):
-                self._tmpfile = gtts_tmpfile
+            # First, check if the canonical MP3 cache file exists
+            if os.path.exists(gtts_cache_file):
+                self._tmpfile = gtts_cache_file
                 return True
+            
+            # If not, try to generate it
             slow = tag.speed < 1
-            if run_gtts_with_timeout(tag.field_text, voice.gtts_lang, slow, gtts_tmpfile):
-                self._tmpfile = gtts_tmpfile
+            if run_gtts_with_timeout(tag.field_text, voice.gtts_lang, slow, gtts_cache_file):
+                self._tmpfile = gtts_cache_file
                 return True
             return False
         
-        def try_piper():
-            if os.path.exists(piper_tmpfile):
-                self._tmpfile = piper_tmpfile
-                return True
-            if run_piper_tts(tag.field_text, voice.lang, piper_tmpfile):
-                self._tmpfile = piper_tmpfile
+        def try_piper_as_fallback():
+            # Piper is only a fallback. We DO NOT check for an existing file.
+            # We generate a temporary file for immediate playback.
+            if run_piper_tts(tag.field_text, voice.lang, piper_temp_file):
+                self._tmpfile = piper_temp_file
                 return True
             return False
 
         if engine == "Piper":
-            if not try_piper():
+            if not try_piper_as_fallback():
                 print("Piper failed. No fallback configured.")
-        else: # Default to gTTS
+        else: # Default to gTTS with Piper fallback
             if not try_gtts():
                 print("gTTS failed or timed out, falling back to Piper...")
-                if not try_piper():
+                if not try_piper_as_fallback():
                     print("Fallback to Piper also failed.")
     
-    # this is called on the main thread, after _play finishes
     def _on_done(self, ret: Future, cb: OnDoneCallback) -> None:
-        # check if _play failed to produce a file
         if not hasattr(self, "_tmpfile") or not self._tmpfile:
             cb()
             return
@@ -210,19 +208,15 @@ class GTTSPlayer(TTSProcessPlayer):
     def stop(self):
         pass
 
-# register our handler
 av_player.players.append(GTTSPlayer(mw.taskman))
 
 # --- UI Menu for Switching Engine ---
 def switch_tts_engine():
     conf = get_config()
     current_engine = conf.get("tts_engine", "gTTS")
-    
     new_engine = "Piper" if current_engine == "gTTS" else "gTTS"
-        
     conf["tts_engine"] = new_engine
     write_config(conf)
-    
     action.setText(f"TTS Engine: {new_engine}")
     showInfo(f"TTS engine switched to: {new_engine}")
 
@@ -230,12 +224,9 @@ def setup_menu():
     global action
     action = QAction(mw)
     mw.form.menuTools.addAction(action)
-
     conf = get_config()
     engine = conf.get("tts_engine", "gTTS")
     action.setText(f"TTS Engine: {engine}")
-
     qconnect(action.triggered, switch_tts_engine)
 
-# Initialize menu when Anki starts
 setup_menu()
