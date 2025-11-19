@@ -44,7 +44,7 @@ This enhanced version uses Google's Text-to-Speech service when online but autom
 
 The primary goal of this enhancement is to create a self-sufficient study environment. Whether you are on the go with limited mobile data or wish to disconnect completely for a focused study session, this add-on ensures your audio cards work flawlessly. By leveraging a local TTS engine, it saves bandwidth, works entirely offline, and removes dependency on an active internet connection.
 
-[Back to Top](#table-of-contents)
+[Return to Top](#table-of-contents)
 
 ## Features
 
@@ -57,7 +57,7 @@ The primary goal of this enhancement is to create a self-sufficient study enviro
 -   **On-the-Fly Engine Switching**: Instantly switch between `gTTS` and `Piper` as the primary engine via the Anki `Tools` menu.
 -   **Configurable Timeout**: Prevents Anki from freezing by setting a custom timeout for web requests before switching to the offline engine.
 
-[Back to Top](#table-of-contents)
+[Return to Top](#table-of-contents)
 
 ## How It Works
 
@@ -150,7 +150,7 @@ The default configuration (in `config.json`) looks like this:
 | `persistent_cache_enabled` | Boolean | If `true`, saves files to a permanent folder. If `false`, uses Anki's temp folder (deleted on exit). |
 | `persistent_cache_path` | String | Optional. A custom absolute path for the cache folder. If empty `""`, defaults to `user_cache` inside the add-on folder. |
 
-[Back to Top](#table-of-contents)
+[Return to Top](#table-of-contents)
 
 ## Usage in Templates
 
@@ -186,23 +186,23 @@ For a comprehensive collection of real-world templates demonstrating proper inte
 
 This project provides extensive examples of how to structure cards and tag fields for various languages within a production-ready environment.
 
-[Back to Top](#table-of-contents)
+[Return to Top](#table-of-contents)
 
 ## Related Projects
 
 -   [**Piper TTS Command-Line Utility**](https://github.com/voothi/20241206010110-piper-tts): The local TTS engine that this add-on depends on for its offline functionality.
 -   [**No TTS Player for Anki**](https://github.com/voothi/20250902105308-anki-no-tts/): A companion add-on to temporarily or permanently silence all TTS fields (`{{tts...}}`) without needing to edit card templates.
 
-[Back to Top](#table-of-contents)
+[Return to Top](#table-of-contents)
 
 ## Kardenwort Ecosystem
 
 This project is part of the **[Kardenwort](https://github.com/kardenwort)** environment, designed to create a focused and efficient learning ecosystem.
 
-[Back to Top](#table-of-contents)
+[Return to Top](#table-of-contents)
 
 ## License
 
 [GNU AGPL v3](./LICENSE)
 
-[Back to Top](#table-of-contents)
+[Return to Top](#table-of-contents)
