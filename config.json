@@ -3,5 +3,7 @@
     "gtts_timeout_sec": 5,
     "piper_python_path": "C:/Python/Python312/python.exe",
     "piper_script_path": "U:/voothi/20241206010110-piper-tts/piper_tts.py",
-    "piper_cache_enabled": true
+    "piper_cache_enabled": true,
+    "persistent_cache_enabled": true,
+    "persistent_cache_path": ""
 }
