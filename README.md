@@ -31,6 +31,10 @@ This enhanced version uses Google's Text-to-Speech service when online but autom
     - [Part 3: Finalize](#part-3-finalize)
   - [Configuration](#configuration)
     - [Configuration Keys](#configuration-keys)
+  - [Usage in Templates](#usage-in-templates)
+    - [Basic Syntax](#basic-syntax)
+    - [Language Examples](#language-examples)
+    - [Real-World Examples](#real-world-examples)
   - [Related Projects](#related-projects)
   - [Kardenwort Ecosystem](#kardenwort-ecosystem)
   - [License](#license)
@@ -144,6 +148,44 @@ The default configuration (in `config.json`) looks like this:
 | `piper_cache_enabled` | Boolean | If `true`, uses existing WAV files. If `false`, regenerates audio every time (high CPU usage). |
 | `persistent_cache_enabled` | Boolean | If `true`, saves files to a permanent folder. If `false`, uses Anki's temp folder (deleted on exit). |
 | `persistent_cache_path` | String | Optional. A custom absolute path for the cache folder. If empty `""`, defaults to `user_cache` inside the add-on folder. |
+
+[Back to Top](#table-of-contents)
+
+## Usage in Templates
+
+To enable audio on your cards, you need to add the standard Anki TTS tag to your Card Templates (Front or Back).
+
+### Basic Syntax
+
+Insert the following code into your template where you want the audio to play:
+
+```anki
+{{tts en_GB voices=gTTS:Front}}
+```
+
+*   **`en_GB`**: The language code. Change this to match your target language (e.g., `en_US`, `de_DE`, `ru_RU`, `uk_UA`).
+*   **`voices=gTTS`**: **Important:** Do not change this parameter. This add-on specifically intercepts requests made to `gTTS` to enable the caching and offline fallback features.
+*   **`Front`**: The name of the field you want to be read aloud.
+
+### Language Examples
+
+Below are examples of how to configure the tag for different languages, based on common usage patterns:
+
+*   **English (UK):** `{{tts en_GB voices=gTTS:EnglishWord}}`
+*   **English (US):** `{{tts en_US voices=gTTS:EnglishWord}}`
+*   **German:** `{{tts de_DE voices=gTTS:GermanWord}}`
+*   **Russian:** `{{tts ru_RU voices=gTTS:RussianhWord}}`
+*   **Ukrainian:** `{{tts uk_UA voices=gTTS:UkrainianhWord}}`
+
+### Real-World Examples
+
+For a comprehensive collection of real-world templates demonstrating proper integration, please refer to the **Kardenwort Anki Templates** project.
+
+> **[Kardenwort Anki Templates](https://github.com/kardenwort/20250913123501-kardenwort-anki-templates)**
+
+This project provides extensive examples of how to structure cards and tag fields for various languages within a production-ready environment.
+
+[Back to Top](#table-of-contents)
 
 ## Related Projects
 
