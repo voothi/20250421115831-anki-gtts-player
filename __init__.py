@@ -156,13 +156,14 @@ class GTTSPlayer(TTSProcessPlayer):
 
         conf = get_config()
         engine = conf.get("tts_engine", "gTTS")
+        piper_cache_enabled = conf.get("piper_cache_enabled", False)
         
         base_filename = self.temp_file_for_tag_and_voice(tag, match.voice)
         
-        # The canonical cache file is ALWAYS the gTTS MP3
+        # The canonical cache file for gTTS is MP3
         gtts_cache_file = f"{base_filename}.mp3"
-        # The Piper file is always temporary and uses a different name to avoid cache conflicts
-        piper_temp_file = f"{base_filename}.wav"
+        # The cache file for Piper is WAV
+        piper_cache_file = f"{base_filename}.wav"
 
         self._tmpfile = None
 
@@ -179,21 +180,27 @@ class GTTSPlayer(TTSProcessPlayer):
                 return True
             return False
         
-        def try_piper_as_fallback():
-            # Piper is only a fallback. We DO NOT check for an existing file.
-            # We generate a temporary file for immediate playback.
-            if run_piper_tts(tag.field_text, voice.lang, piper_temp_file):
-                self._tmpfile = piper_temp_file
+        def try_piper():
+            # 1. Check Piper cache if enabled
+            if piper_cache_enabled and os.path.exists(piper_cache_file):
+                print(f"Using existing Piper cache: {piper_cache_file}")
+                self._tmpfile = piper_cache_file
+                return True
+
+            # 2. Generate if not found or cache disabled
+            if run_piper_tts(tag.field_text, voice.lang, piper_cache_file):
+                self._tmpfile = piper_cache_file
                 return True
             return False
 
         if engine == "Piper":
-            if not try_piper_as_fallback():
+            if not try_piper():
                 print("Piper failed. No fallback configured.")
         else: # Default to gTTS with Piper fallback
             if not try_gtts():
                 print("gTTS failed or timed out, falling back to Piper...")
-                if not try_piper_as_fallback():
+                # Fallback logic
+                if not try_piper():
                     print("Fallback to Piper also failed.")
     
     def _on_done(self, ret: Future, cb: OnDoneCallback) -> None:
