@@ -2,9 +2,10 @@
 
 An enhanced Anki add-on that provides Text-to-Speech (TTS) functionality with a seamless offline fallback, intelligent caching, and persistent storage.
 
-[![AnkiWeb](https://img.shields.io/badge/AnkiWeb-42281744-blue)](https://ankiweb.net/shared/info/42281744)
 [![Version](https://img.shields.io/badge/version-v1.46.14-blue)](https://github.com/voothi/20250421115831-anki-gtts-player) 
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
+[![AnkiWeb](https://img.shields.io/badge/AnkiWeb-42281744-blue)](https://ankiweb.net/shared/info/42281744)
+[![Anki](https://img.shields.io/badge/Anki-2.1%2B-lightgrey)](https://apps.ankiweb.net/)
 
 > **Attribution & Source**
 >
