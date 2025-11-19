@@ -88,6 +88,9 @@ The add-on intercepts Anki's default TTS requests and processes them based on yo
 >
 > Anki manages user preferences using a separate `meta.json` file. Manually editing `config.json` in the file system is **not recommended**, as your changes may be ignored or overwritten by Anki's internal settings management.
 
+> **Immediate Effect:** 
+> Changes to cache settings (`piper_cache_enabled`, `gtts_cache_enabled`, `persistent_cache_enabled`) apply **immediately** after clicking "OK" in the configuration window. You do not need to restart Anki for these changes to take effect, as the add-on re-reads the configuration before playing each audio file.
+
 The default configuration (in `config.json`) looks like this:
 
 ```json
