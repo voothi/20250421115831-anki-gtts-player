@@ -189,25 +189,24 @@ class GTTSPlayer(TTSProcessPlayer):
 
         conf = get_config()
         engine = conf.get("tts_engine", "gTTS")
+        
+        # Configuration flags
+        gtts_cache_enabled = conf.get("gtts_cache_enabled", True)  # Default True
         piper_cache_enabled = conf.get("piper_cache_enabled", False)
         
         # --- PATH DETERMINATION LOGIC ---
         persistent_enabled = conf.get("persistent_cache_enabled", False)
         custom_path = conf.get("persistent_cache_path", "").strip()
         
-        # 1. Get standard Anki temporary path (we rely on Anki's hashing for the filename)
         anki_temp_full_path = self.temp_file_for_tag_and_voice(tag, match.voice)
         
         if persistent_enabled:
-            # Determine root cache directory
             if custom_path:
                 cache_dir = custom_path
             else:
-                # Default: 'user_cache' inside the addon folder
                 addon_dir = os.path.dirname(__file__)
                 cache_dir = os.path.join(addon_dir, "user_cache")
             
-            # Create directory if it doesn't exist
             if not os.path.exists(cache_dir):
                 try:
                     os.makedirs(cache_dir, exist_ok=True)
@@ -215,14 +214,12 @@ class GTTSPlayer(TTSProcessPlayer):
                     print(f"Error creating cache dir: {e}. Falling back to temp.")
                     base_filename = anki_temp_full_path
                 else:
-                    # Construct path using Anki's hash filename but our dir
                     filename_only = os.path.basename(anki_temp_full_path)
                     base_filename = os.path.join(cache_dir, filename_only)
             else:
                 filename_only = os.path.basename(anki_temp_full_path)
                 base_filename = os.path.join(cache_dir, filename_only)
         else:
-            # Use standard Anki temp folder (cleared on exit)
             base_filename = anki_temp_full_path
 
         gtts_cache_file = f"{base_filename}.mp3"
@@ -231,17 +228,19 @@ class GTTSPlayer(TTSProcessPlayer):
         self._tmpfile = None
 
         def try_gtts():
-            # Check if valid cache exists (> 0 bytes)
-            if os.path.exists(gtts_cache_file):
+            # 1. Check if cache is enabled AND valid file exists
+            if gtts_cache_enabled and os.path.exists(gtts_cache_file):
                 if os.path.getsize(gtts_cache_file) > 0:
                     self._tmpfile = gtts_cache_file
                     return True
                 else:
+                    # Invalid 0-byte file, remove it regardless of cache setting
                     try:
                         os.remove(gtts_cache_file)
                     except OSError:
                         pass
             
+            # 2. If cache is DISABLED, or file DOES NOT EXIST -> Download
             slow = tag.speed < 1
             if run_gtts_with_timeout(tag.field_text, voice.gtts_lang, slow, gtts_cache_file):
                 self._tmpfile = gtts_cache_file
