@@ -2,7 +2,7 @@
 
 An enhanced Anki add-on that provides Text-to-Speech (TTS) functionality with a seamless offline fallback, intelligent caching, and persistent storage.
 
-[![Version](https://img.shields.io/badge/version-v1.46.4-blue)](https://github.com/voothi/20250421115831-anki-gtts-player) 
+[![Version](https://img.shields.io/badge/version-v1.46.12-blue)](https://github.com/voothi/20250421115831-anki-gtts-player) 
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 
 > **Attribution and License Notice**
