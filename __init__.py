@@ -77,7 +77,7 @@ def run_piper_tts(text: str, lang: str, output_path: str) -> bool:
             creationflags=creation_flags
         )
         if process.returncode == 0 and os.path.exists(temp_output_path) and os.path.getsize(temp_output_path) > 0:
-            # Atomic rename to ensure valid cache
+            # Atomic rename
             if os.path.exists(output_path):
                 try:
                     os.remove(output_path)
@@ -104,8 +104,7 @@ def run_piper_tts(text: str, lang: str, output_path: str) -> bool:
 def run_gtts_with_timeout(text: str, lang: str, slow: bool, output_path: str) -> bool:
     """
     Runs gTTS in a separate thread with a configurable timeout.
-    Uses atomic write (save to .temp -> rename) to prevent partial files 
-    from being treated as valid cache in future runs.
+    Uses atomic write (save to .temp -> rename).
     """
     conf = get_config()
     timeout = conf.get("gtts_timeout_sec", 5)
@@ -128,9 +127,6 @@ def run_gtts_with_timeout(text: str, lang: str, slow: bool, output_path: str) ->
 
         if thread.is_alive():
             print(f"gTTS timed out after {timeout} seconds.")
-            # We cannot kill the thread, but we ensure we don't rename the temp file here.
-            # If the thread eventually finishes, it will leave a .temp file, which is harmless
-            # because we only check for the existence of the final .mp3 file.
             return False
         
         if 'error' in result_container:
@@ -195,21 +191,52 @@ class GTTSPlayer(TTSProcessPlayer):
         engine = conf.get("tts_engine", "gTTS")
         piper_cache_enabled = conf.get("piper_cache_enabled", False)
         
-        base_filename = self.temp_file_for_tag_and_voice(tag, match.voice)
+        # --- PATH DETERMINATION LOGIC ---
+        persistent_enabled = conf.get("persistent_cache_enabled", False)
+        custom_path = conf.get("persistent_cache_path", "").strip()
         
+        # 1. Get standard Anki temporary path (we rely on Anki's hashing for the filename)
+        anki_temp_full_path = self.temp_file_for_tag_and_voice(tag, match.voice)
+        
+        if persistent_enabled:
+            # Determine root cache directory
+            if custom_path:
+                cache_dir = custom_path
+            else:
+                # Default: 'user_cache' inside the addon folder
+                addon_dir = os.path.dirname(__file__)
+                cache_dir = os.path.join(addon_dir, "user_cache")
+            
+            # Create directory if it doesn't exist
+            if not os.path.exists(cache_dir):
+                try:
+                    os.makedirs(cache_dir, exist_ok=True)
+                except OSError as e:
+                    print(f"Error creating cache dir: {e}. Falling back to temp.")
+                    base_filename = anki_temp_full_path
+                else:
+                    # Construct path using Anki's hash filename but our dir
+                    filename_only = os.path.basename(anki_temp_full_path)
+                    base_filename = os.path.join(cache_dir, filename_only)
+            else:
+                filename_only = os.path.basename(anki_temp_full_path)
+                base_filename = os.path.join(cache_dir, filename_only)
+        else:
+            # Use standard Anki temp folder (cleared on exit)
+            base_filename = anki_temp_full_path
+
         gtts_cache_file = f"{base_filename}.mp3"
         piper_cache_file = f"{base_filename}.wav"
 
         self._tmpfile = None
 
         def try_gtts():
-            # Check if valid cache exists (must be > 0 bytes)
+            # Check if valid cache exists (> 0 bytes)
             if os.path.exists(gtts_cache_file):
                 if os.path.getsize(gtts_cache_file) > 0:
                     self._tmpfile = gtts_cache_file
                     return True
                 else:
-                    # Clean up corrupted 0-byte file
                     try:
                         os.remove(gtts_cache_file)
                     except OSError:
@@ -222,7 +249,6 @@ class GTTSPlayer(TTSProcessPlayer):
             return False
         
         def try_piper():
-            # 1. Check Piper cache if enabled (must be > 0 bytes)
             if piper_cache_enabled and os.path.exists(piper_cache_file):
                 if os.path.getsize(piper_cache_file) > 0:
                     print(f"Using existing Piper cache: {piper_cache_file}")
@@ -234,7 +260,6 @@ class GTTSPlayer(TTSProcessPlayer):
                     except OSError:
                         pass
 
-            # 2. Generate if not found
             if run_piper_tts(tag.field_text, voice.lang, piper_cache_file):
                 self._tmpfile = piper_cache_file
                 return True
