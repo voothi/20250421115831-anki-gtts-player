@@ -15,8 +15,6 @@ An enhanced Anki add-on that provides Text-to-Speech (TTS) functionality with a 
 
 This enhanced version uses Google's Text-to-Speech service when online but automatically switches to a local, high-quality Piper TTS engine when an internet connection is unavailable or slow.
 
-This project is part of the **[Kardenwort](https://github.com/kardenwort)** environment, designed to create a focused and efficient learning ecosystem.
-
 ## Table of Contents
 
 - [gTTS Player with Piper Fallback \& Smart Caching for Anki](#gtts-player-with-piper-fallback--smart-caching-for-anki)
