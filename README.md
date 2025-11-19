@@ -2,7 +2,7 @@
 
 An enhanced Anki add-on that provides Text-to-Speech (TTS) functionality with a seamless offline fallback, intelligent caching, and persistent storage.
 
-[![Version](https://img.shields.io/badge/version-v1.46.4-blue)](https://github.com/voothi/20250421115831-anki-gtts-player) 
+[![Version](https://img.shields.io/badge/version-v1.46.8-blue)](https://github.com/voothi/20250421115831-anki-gtts-player) 
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 
 > **Attribution and License Notice**
@@ -83,7 +83,12 @@ The add-on intercepts Anki's default TTS requests and processes them based on yo
 
 ## Configuration
 
-Create or edit the `config.json` file in the add-on's directory.
+> **Important:** Please configure this add-on via the Anki interface:
+> **Tools -> Add-ons -> Select this add-on -> Config**.
+>
+> Anki manages user preferences using a separate `meta.json` file. Manually editing `config.json` in the file system is **not recommended**, as your changes may be ignored or overwritten by Anki's internal settings management.
+
+The default configuration (in `config.json`) looks like this:
 
 ```json
 {
