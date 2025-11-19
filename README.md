@@ -2,7 +2,8 @@
 
 An enhanced Anki add-on that provides Text-to-Speech (TTS) functionality with a seamless offline fallback, intelligent caching, and persistent storage.
 
-[![Version](https://img.shields.io/badge/version-v1.46.12-blue)](https://github.com/voothi/20250421115831-anki-gtts-player) 
+[![AnkiWeb](https://img.shields.io/badge/AnkiWeb-42281744-blue)](https://ankiweb.net/shared/info/42281744)
+[![Version](https://img.shields.io/badge/version-v1.46.14-blue)](https://github.com/voothi/20250421115831-anki-gtts-player) 
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 
 > **Attribution and License Notice**
@@ -11,7 +12,9 @@ An enhanced Anki add-on that provides Text-to-Speech (TTS) functionality with a 
 >
 > The original code is **Copyright © Ankitects Pty Ltd and contributors** and is licensed under the **GNU AGPL, version 3 or later**. In accordance with its terms, this derivative work is also licensed under the same license.
 
-> **Note:** This is a modified fork of the official **gTTS Player** add-on. The original source code (as of November 17, 2025) can be found in the [official Anki Add-ons repository](https://github.com/ankitects/anki-addons/tree/main/code/gtts_player) and on [AnkiWeb](https://ankiweb.net/shared/info/391644525).
+> **Note:** This is a modified fork of the official **gTTS Player** add-on. The original source code can be found on [AnkiWeb (ID: 391644525)](https://ankiweb.net/shared/info/391644525).
+>
+> **This enhanced version is available on AnkiWeb under ID: [42281744](https://ankiweb.net/shared/info/42281744).**
 
 This enhanced version uses Google's Text-to-Speech service when online but automatically switches to a local, high-quality Piper TTS engine when an internet connection is unavailable or slow.
 
@@ -24,6 +27,9 @@ This enhanced version uses Google's Text-to-Speech service when online but autom
   - [How It Works](#how-it-works)
   - [Prerequisites](#prerequisites)
   - [Installation](#installation)
+    - [Part 1: Install the Add-on](#part-1-install-the-add-on)
+    - [Part 2: Set up the Piper TTS Backend (Mandatory)](#part-2-set-up-the-piper-tts-backend-mandatory)
+    - [Part 3: Finalize](#part-3-finalize)
   - [Configuration](#configuration)
     - [Configuration Keys](#configuration-keys)
   - [Related Projects](#related-projects)
@@ -75,14 +81,32 @@ The add-on intercepts Anki's default TTS requests and processes them based on yo
 
 ## Installation
 
-1.  **Get the Code**: Clone this repository or download the ZIP and extract it.
-2.  **Install**: Move the extracted folder into your Anki `addons21` directory.
-3.  **Step 3: Set up the Piper TTS Backend (Mandatory)**
-    *   You **must** download the [Piper TTS Command-Line Utility](https://github.com/voothi/20241206010110-piper-tts).
-    *   You can download it via `git clone` or as a ZIP archive from the Releases page.
-    *   **Crucial:** You must follow the setup instructions in that repository (downloading voice models, configuring `config.ini`, etc.). **If this utility is not configured correctly, the Piper fallback will not work.**
-4.  **Configure**: Create a `config.json` file in the add-on folder (see below).
-5.  **Restart**: Restart Anki.
+### Part 1: Install the Add-on
+
+Choose **one** of the following methods:
+
+**Option A: Install via AnkiWeb (Recommended)**
+1.  Open Anki.
+2.  Go to **Tools** > **Add-ons** > **Get Add-ons...**
+3.  Enter code: `42281744`
+4.  Click **OK**.
+
+**Option B: Manual Installation (Advanced)**
+1.  Clone this repository or download the ZIP.
+2.  Move the extracted folder into your Anki `addons21` directory.
+
+### Part 2: Set up the Piper TTS Backend (Mandatory)
+
+Regardless of how you installed the add-on in Part 1, you **must** set up the external TTS engine:
+
+1.  Download the [Piper TTS Command-Line Utility](https://github.com/voothi/20241206010110-piper-tts).
+2.  **Crucial:** Follow the setup instructions in that repository (downloading voice models, configuring `config.ini`, etc.). 
+3.  **Note:** If this utility is not configured correctly, the Piper fallback will **not** work.
+
+### Part 3: Finalize
+
+1.  **Configure**: Create or update the configuration (see below) to point to your Python and Piper script paths.
+2.  **Restart**: Restart Anki to ensure all modules are loaded correctly.
 
 ## Configuration
 
