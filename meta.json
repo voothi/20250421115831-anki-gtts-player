@@ -1,1 +1,0 @@
-{"name": "gTTS text to speech support", "mod": 1697684546, "min_point_version": 231000, "max_point_version": 231000, "branch_index": 2, "disabled": false, "conflicts": [], "update_enabled": true, "config": {"tts_engine": "gTTS", "gtts_timeout_sec": 5, "piper_python_path": "C:/Python/Python312/python.exe", "piper_script_path": "U:/voothi/20241206010110-piper-tts/piper_tts.py"}}
