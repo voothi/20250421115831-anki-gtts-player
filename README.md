@@ -40,6 +40,8 @@ This enhanced version uses Google's Text-to-Speech service when online but autom
   - [Kardenwort Ecosystem](#kardenwort-ecosystem)
   - [License](#license)
 
+---
+
 ## Project Philosophy
 
 The primary goal of this enhancement is to create a self-sufficient study environment. Whether you are on the go with limited mobile data or wish to disconnect completely for a focused study session, this add-on ensures your audio cards work flawlessly. By leveraging a local TTS engine, it saves bandwidth, works entirely offline, and removes dependency on an active internet connection.
