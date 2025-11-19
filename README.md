@@ -2,7 +2,14 @@
 
 An enhanced Anki add-on that provides Text-to-Speech (TTS) functionality with a seamless offline fallback, ensuring your study flow is never interrupted.
 
-[![Version](https://img.shields.io/badge/version-v1.44.8-blue)](https://github.com/voothi/20250421115831-anki-gtts-player) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Version](https://img.shields.io/badge/version-v1.44.8-blue)](https://github.com/voothi/20250421115831-anki-gtts-player) 
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
+
+> **Attribution and License Notice**
+>
+> This add-on is based on the official "gTTS Player" example from the [Anki Add-ons repository](https://github.com/ankitects/anki-addons/tree/main/code/gtts_player).
+>
+> The original code is **Copyright © Ankitects Pty Ltd and contributors** and is licensed under the **GNU AGPL, version 3 or later**. In accordance with its terms, this derivative work is also licensed under the same license.
 
 > **Note:** This is a modified fork of the official **gTTS Player** add-on. The original source code (as of November 17, 2025) can be found in the [official Anki Add-ons repository](https://github.com/ankitects/anki-addons/tree/main/code/gtts_player) and on [AnkiWeb](https://ankiweb.net/shared/info/391644525).
 
@@ -21,6 +28,7 @@ This project is part of the **[Kardenwort](https://github.com/kardenwort)** envi
   - [Installation](#installation)
   - [Configuration](#configuration)
   - [Related Projects](#related-projects)
+  - [Kardenwort Ecosystem](#kardenwort-ecosystem)
   - [License](#license)
 
 ## Project Philosophy
@@ -130,6 +138,12 @@ Create a `config.json` file in the add-on's directory (`addons21/391644525`) wit
 
 -   [**Piper TTS Command-Line Utility**](https://github.com/voothi/20241206010110-piper-tts): The local TTS engine that this add-on depends on for its offline functionality.
 -   [**No TTS Player for Anki**](https://github.com/voothi/20250902105308-anki-no-tts/): A companion add-on to temporarily or permanently silence all TTS fields (`{{tts...}}`) without needing to edit card templates.
+
+[Back to Top](#table-of-contents)
+
+## Kardenwort Ecosystem
+
+This project is part of the **[Kardenwort](https://github.com/kardenwort)** environment, designed to create a focused and efficient learning ecosystem.
 
 [Back to Top](#table-of-contents)
 
