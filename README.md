@@ -2,7 +2,7 @@
 
 An enhanced Anki add-on that provides Text-to-Speech (TTS) functionality with a seamless offline fallback, intelligent caching, and persistent storage.
 
-[![Version](https://img.shields.io/badge/version-v1.46.10-blue)](https://github.com/voothi/20250421115831-anki-gtts-player) 
+[![Version](https://img.shields.io/badge/version-v1.46.4-blue)](https://github.com/voothi/20250421115831-anki-gtts-player) 
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 
 > **Attribution and License Notice**
@@ -77,7 +77,10 @@ The add-on intercepts Anki's default TTS requests and processes them based on yo
 
 1.  **Get the Code**: Clone this repository or download the ZIP and extract it.
 2.  **Install**: Move the extracted folder into your Anki `addons21` directory.
-3.  **Piper Setup**: Ensure you have the Piper TTS utility set up (see Related Projects).
+3.  **Step 3: Set up the Piper TTS Backend (Mandatory)**
+    *   You **must** download the [Piper TTS Command-Line Utility](https://github.com/voothi/20241206010110-piper-tts).
+    *   You can download it via `git clone` or as a ZIP archive from the Releases page.
+    *   **Crucial:** You must follow the setup instructions in that repository (downloading voice models, configuring `config.ini`, etc.). **If this utility is not configured correctly, the Piper fallback will not work.**
 4.  **Configure**: Create a `config.json` file in the add-on folder (see below).
 5.  **Restart**: Restart Anki.
 
