@@ -1,3 +1,4 @@
+// __init__.py
 # Copyright: Ankitects Pty Ltd and contributors
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
@@ -38,11 +39,13 @@ def write_config(new_config):
 def run_piper_tts(text: str, lang: str, output_path: str) -> bool:
     """
     Calls piper_tts.py to generate an audio file.
-    Returns True on success, False on failure.
+    Uses atomic write (temp file -> rename) to prevent corrupted cache.
     """
     conf = get_config()
     python_exe = conf.get("piper_python_path")
     script_path = conf.get("piper_script_path")
+    
+    temp_output_path = f"{output_path}.temp"
 
     if not all([python_exe, script_path]):
         print("Piper TTS: Python executable or script path not configured.")
@@ -62,7 +65,7 @@ def run_piper_tts(text: str, lang: str, output_path: str) -> bool:
         script_path,
         "--lang", lang_code,
         "--text", text,
-        "--output-file", output_path
+        "--output-file", temp_output_path
     ]
 
     try:
@@ -74,30 +77,47 @@ def run_piper_tts(text: str, lang: str, output_path: str) -> bool:
             encoding='utf-8',
             creationflags=creation_flags
         )
-        if process.returncode == 0:
+        if process.returncode == 0 and os.path.exists(temp_output_path) and os.path.getsize(temp_output_path) > 0:
+            # Atomic rename to ensure valid cache
+            if os.path.exists(output_path):
+                try:
+                    os.remove(output_path)
+                except OSError:
+                    pass
+            os.rename(temp_output_path, output_path)
             print(f"Piper TTS successfully generated: {output_path}")
             return True
         else:
             print(f"Piper TTS Error: {process.stderr}")
+            if os.path.exists(temp_output_path):
+                os.remove(temp_output_path)
             return False
     except Exception as e:
         print(f"Failed to run Piper TTS process: {e}")
+        if os.path.exists(temp_output_path):
+            try:
+                os.remove(temp_output_path)
+            except:
+                pass
         return False
 
 # --- gTTS Wrapper with Timeout ---
 def run_gtts_with_timeout(text: str, lang: str, slow: bool, output_path: str) -> bool:
     """
     Runs gTTS in a separate thread with a configurable timeout.
-    Returns True on success, False on failure or timeout.
+    Uses atomic write (save to .temp -> rename) to prevent partial files 
+    from being treated as valid cache in future runs.
     """
     conf = get_config()
     timeout = conf.get("gtts_timeout_sec", 5)
     result_container = {}
+    
+    temp_output_path = f"{output_path}.temp"
 
     def gtts_save_job():
         try:
             tts = gTTS(text=text, lang=lang, lang_check=False, slow=slow)
-            tts.save(output_path)
+            tts.save(temp_output_path)
             result_container['success'] = True
         except Exception as e:
             result_container['error'] = e
@@ -109,12 +129,30 @@ def run_gtts_with_timeout(text: str, lang: str, slow: bool, output_path: str) ->
 
         if thread.is_alive():
             print(f"gTTS timed out after {timeout} seconds.")
+            # We cannot kill the thread, but we ensure we don't rename the temp file here.
+            # If the thread eventually finishes, it will leave a .temp file, which is harmless
+            # because we only check for the existence of the final .mp3 file.
             return False
         
         if 'error' in result_container:
+            if os.path.exists(temp_output_path):
+                try:
+                    os.remove(temp_output_path)
+                except:
+                    pass
             raise result_container['error']
         
-        return result_container.get('success', False)
+        # Success: Rename temp to final
+        if os.path.exists(temp_output_path) and os.path.getsize(temp_output_path) > 0:
+            if os.path.exists(output_path):
+                try:
+                    os.remove(output_path)
+                except OSError:
+                    pass
+            os.rename(temp_output_path, output_path)
+            return True
+        
+        return False
 
     except gTTSError as e:
         print(f"gTTS API Error: {e}")
@@ -160,20 +198,24 @@ class GTTSPlayer(TTSProcessPlayer):
         
         base_filename = self.temp_file_for_tag_and_voice(tag, match.voice)
         
-        # The canonical cache file for gTTS is MP3
         gtts_cache_file = f"{base_filename}.mp3"
-        # The cache file for Piper is WAV
         piper_cache_file = f"{base_filename}.wav"
 
         self._tmpfile = None
 
         def try_gtts():
-            # First, check if the canonical MP3 cache file exists
+            # Check if valid cache exists (must be > 0 bytes)
             if os.path.exists(gtts_cache_file):
-                self._tmpfile = gtts_cache_file
-                return True
+                if os.path.getsize(gtts_cache_file) > 0:
+                    self._tmpfile = gtts_cache_file
+                    return True
+                else:
+                    # Clean up corrupted 0-byte file
+                    try:
+                        os.remove(gtts_cache_file)
+                    except OSError:
+                        pass
             
-            # If not, try to generate it
             slow = tag.speed < 1
             if run_gtts_with_timeout(tag.field_text, voice.gtts_lang, slow, gtts_cache_file):
                 self._tmpfile = gtts_cache_file
@@ -181,13 +223,19 @@ class GTTSPlayer(TTSProcessPlayer):
             return False
         
         def try_piper():
-            # 1. Check Piper cache if enabled
+            # 1. Check Piper cache if enabled (must be > 0 bytes)
             if piper_cache_enabled and os.path.exists(piper_cache_file):
-                print(f"Using existing Piper cache: {piper_cache_file}")
-                self._tmpfile = piper_cache_file
-                return True
+                if os.path.getsize(piper_cache_file) > 0:
+                    print(f"Using existing Piper cache: {piper_cache_file}")
+                    self._tmpfile = piper_cache_file
+                    return True
+                else:
+                    try:
+                        os.remove(piper_cache_file)
+                    except OSError:
+                        pass
 
-            # 2. Generate if not found or cache disabled
+            # 2. Generate if not found
             if run_piper_tts(tag.field_text, voice.lang, piper_cache_file):
                 self._tmpfile = piper_cache_file
                 return True
@@ -199,7 +247,6 @@ class GTTSPlayer(TTSProcessPlayer):
         else: # Default to gTTS with Piper fallback
             if not try_gtts():
                 print("gTTS failed or timed out, falling back to Piper...")
-                # Fallback logic
                 if not try_piper():
                     print("Fallback to Piper also failed.")
     
