@@ -6,15 +6,14 @@ An enhanced Anki add-on that provides Text-to-Speech (TTS) functionality with a 
 [![Version](https://img.shields.io/badge/version-v1.46.14-blue)](https://github.com/voothi/20250421115831-anki-gtts-player) 
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 
-> **Attribution and License Notice**
+> **Attribution & Source**
 >
-> This add-on is based on the official "gTTS Player" example from the [Anki Add-ons repository](https://github.com/ankitects/anki-addons/tree/main/code/gtts_player).
+> This add-on is a modified fork of the official **gTTS Player** developed by Ankitects Pty Ltd.
 >
-> The original code is **Copyright © Ankitects Pty Ltd and contributors** and is licensed under the **GNU AGPL, version 3 or later**. In accordance with its terms, this derivative work is also licensed under the same license.
-
-> **Note:** This is a modified fork of the official **gTTS Player** add-on. The original source code can be found on [AnkiWeb (ID: 391644525)](https://ankiweb.net/shared/info/391644525).
+> *   **Original Project**: [Source Code](https://github.com/ankitects/anki-addons/tree/main/code/gtts_player) | [AnkiWeb (391644525)](https://ankiweb.net/shared/info/391644525)
+> *   **This Enhanced Version**: [Source Code](https://github.com/voothi/20250421115831-anki-gtts-player) | [AnkiWeb (42281744)](https://ankiweb.net/shared/info/42281744)
 >
-> **This enhanced version is available on AnkiWeb under ID: [42281744](https://ankiweb.net/shared/info/42281744).**
+> Licensed under the **GNU AGPL, version 3 or later**.
 
 This enhanced version uses Google's Text-to-Speech service when online but automatically switches to a local, high-quality Piper TTS engine when an internet connection is unavailable or slow.
 
