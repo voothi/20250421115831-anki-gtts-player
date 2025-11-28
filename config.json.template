@@ -1,15 +1,17 @@
 {
-    "tts_engine": "gTTS",
-    "gtts_timeout_sec": 5,
-    "piper_python_path": "C:/Python/Python312/python.exe",
-    "piper_script_path": "U:/voothi/20241206010110-piper-tts/piper_tts.py",
-    "gtts_cache_enabled": true,
-    "piper_cache_enabled": true,
-    "persistent_cache_enabled": true,
-    "persistent_cache_path": "",
     "audio_dictionary_enabled": true,
     "audio_dictionary_path": "U:/20240124233825 Dict Ru-Board Forvo",
     "audio_dictionary_exclusions": [
         "voothi"
-    ]
+    ],
+    "tts_engine": "gTTS",
+    "persistent_cache_enabled": true,
+    "persistent_cache_path": "",
+    "gtts_enabled": true,
+    "gtts_timeout_sec": 5,
+    "gtts_cache_enabled": true,
+    "piper_enabled": true,
+    "piper_python_path": "C:/Python/Python312/python.exe",
+    "piper_script_path": "U:/voothi/20241206010110-piper-tts/piper_tts.py",
+    "piper_cache_enabled": true
 }
