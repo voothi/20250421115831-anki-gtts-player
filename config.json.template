@@ -7,7 +7,7 @@
         "ru": "Russian"
     },
     "audio_dictionary_exclusions": [
-        "voothi"
+        "AnaAna"
     ],
     "tts_engine": "gTTS",
     "persistent_cache_enabled": true,
