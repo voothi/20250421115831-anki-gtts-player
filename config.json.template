@@ -6,5 +6,10 @@
     "gtts_cache_enabled": true,
     "piper_cache_enabled": true,
     "persistent_cache_enabled": true,
-    "persistent_cache_path": ""
+    "persistent_cache_path": "",
+    "audio_dictionary_enabled": true,
+    "audio_dictionary_path": "U:/20240124233825 Dict Ru-Board Forvo",
+    "audio_dictionary_exclusions": [
+        "voothi"
+    ]
 }
