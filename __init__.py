@@ -10,7 +10,7 @@ import re
 from pathlib import Path
 from concurrent.futures import Future
 from dataclasses import dataclass
-from typing import List, cast, Optional
+from typing import List, cast, Optional, Dict, Any
 
 from anki.lang import compatMap
 from anki.sound import AVTag, TTSTag
@@ -25,6 +25,10 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "vendor"))
 from gtts import gTTS, gTTSError
 from gtts.lang import tts_langs
 
+# --- Global In-Memory Cache for Audio Dictionary State ---
+# Structure: { ("Text", "lang"): { "files": ["path1", "path2"], "next_idx": 0 } }
+AUDIO_LOOKUP_CACHE: Dict[tuple, Dict[str, Any]] = {}
+
 CONFIG = mw.addonManager.getConfig(__name__)
 
 def get_config():
@@ -38,53 +42,99 @@ def sanitize_filename(text: str) -> str:
     return text.strip().lower()
 
 def find_in_audio_dictionary(text: str, lang: str) -> Optional[str]:
+    """
+    Searches for audio files locally.
+    Implements in-memory caching to remember found files and cycling logic
+    to rotate through authors on repeated plays.
+    """
     conf = get_config()
     if not conf.get("audio_dictionary_enabled", False):
         return None
 
-    root_path = conf.get("audio_dictionary_path", "").strip()
-    if not root_path or not os.path.exists(root_path):
+    # Cache key based on input arguments
+    cache_key = (text, lang)
+
+    # If this word hasn't been looked up this session, search the disk
+    if cache_key not in AUDIO_LOOKUP_CACHE:
+        root_path = conf.get("audio_dictionary_path", "").strip()
+        if not root_path or not os.path.exists(root_path):
+            return None
+
+        exclusions = conf.get("audio_dictionary_exclusions", [])
+        lang_map = conf.get("audio_dictionary_lang_map", {})
+
+        # 1. Resolve Language Folder
+        default_short = lang.split('_')[0] if '_' in lang else lang
+        target_folder = default_short 
+        
+        if lang in lang_map:
+            target_folder = lang_map[lang]
+        elif default_short in lang_map:
+            target_folder = lang_map[default_short]
+
+        # 2. Prepare Search
+        clean_name = sanitize_filename(text)
+        filename = f"{clean_name}.mp3"
+        search_pattern = os.path.join(root_path, target_folder, "*", filename)
+        
+        # 3. Glob and Filter
+        # Use glob to find all candidates
+        candidates = glob.glob(search_pattern)
+        
+        valid_candidates = []
+        if candidates:
+            # Sort candidates to ensure deterministic order (e.g., by author folder name)
+            candidates.sort()
+            
+            for path in candidates:
+                # Check exclusions
+                if exclusions and any(ex in path for ex in exclusions):
+                    continue
+                # Check file validity
+                if os.path.exists(path) and os.path.getsize(path) > 0:
+                    valid_candidates.append(path)
+
+        # 4. Save to Memory Cache (even if empty, to avoid re-globbing)
+        AUDIO_LOOKUP_CACHE[cache_key] = {
+            "files": valid_candidates,
+            "next_idx": 0
+        }
+
+    # --- Retrieval from Memory ---
+    cache_data = AUDIO_LOOKUP_CACHE[cache_key]
+    files = cache_data["files"]
+
+    if not files:
         return None
 
-    exclusions = conf.get("audio_dictionary_exclusions", [])
-    lang_map = conf.get("audio_dictionary_lang_map", {})
+    # --- Cycling Logic ---
+    cycle_enabled = conf.get("audio_dictionary_cycle_enabled", False)
+    # Default limit 2, minimum 1
+    cycle_limit = max(1, conf.get("audio_dictionary_cycle_limit", 2))
     
-    # 1. Determine standard short code (default behavior)
-    default_short = lang.split('_')[0] if '_' in lang else lang
-    
-    # 2. Determine target folder name based on map configuration
-    target_folder = default_short # Fallback default
-    
-    # Check for exact match (e.g. "en_GB" -> "British")
-    if lang in lang_map:
-        target_folder = lang_map[lang]
-    # Check for short match (e.g. "en" -> "English")
-    elif default_short in lang_map:
-        target_folder = lang_map[default_short]
-        
-    clean_name = sanitize_filename(text)
-    filename = f"{clean_name}.mp3"
-    
-    # Construct path using the resolved folder name
-    search_pattern = os.path.join(root_path, target_folder, "*", filename)
-    
-    # Debug print to help user troubleshoot mapping
-    # print(f"Audio Dictionary searching in: {search_pattern}") 
+    # How many files are actually available to cycle through?
+    # We take the minimum of: Available Files vs Configured Limit
+    effective_count = min(len(files), cycle_limit)
 
-    candidates = glob.glob(search_pattern)
+    current_idx = cache_data["next_idx"]
+
+    # Safety check: if config changed and limit decreased, reset index
+    if current_idx >= effective_count:
+        current_idx = 0
+
+    selected_file = files[current_idx]
     
-    if not candidates:
-        return None
+    print(f"Audio Dictionary: Playing file {current_idx + 1}/{effective_count}: {selected_file}")
 
-    for path in candidates:
-        if exclusions and any(ex in path for ex in exclusions):
-            continue
-        
-        if os.path.exists(path) and os.path.getsize(path) > 0:
-            print(f"Audio Dictionary: Found match: {path}")
-            return path
+    # Calculate next index
+    if cycle_enabled and effective_count > 1:
+        # Cycle: 0 -> 1 -> ... -> (Limit-1) -> 0
+        cache_data["next_idx"] = (current_idx + 1) % effective_count
+    else:
+        # Reset to 0 just in case setting changed
+        cache_data["next_idx"] = 0
 
-    return None
+    return selected_file
 
 def run_piper_tts(text: str, lang: str, output_path: str) -> bool:
     conf = get_config()
