@@ -47,13 +47,30 @@ def find_in_audio_dictionary(text: str, lang: str) -> Optional[str]:
         return None
 
     exclusions = conf.get("audio_dictionary_exclusions", [])
+    lang_map = conf.get("audio_dictionary_lang_map", {})
     
-    lang_short = lang.split('_')[0] if '_' in lang else lang
+    # 1. Determine standard short code (default behavior)
+    default_short = lang.split('_')[0] if '_' in lang else lang
     
+    # 2. Determine target folder name based on map configuration
+    target_folder = default_short # Fallback default
+    
+    # Check for exact match (e.g. "en_GB" -> "British")
+    if lang in lang_map:
+        target_folder = lang_map[lang]
+    # Check for short match (e.g. "en" -> "English")
+    elif default_short in lang_map:
+        target_folder = lang_map[default_short]
+        
     clean_name = sanitize_filename(text)
     filename = f"{clean_name}.mp3"
     
-    search_pattern = os.path.join(root_path, lang_short, "*", filename)
+    # Construct path using the resolved folder name
+    search_pattern = os.path.join(root_path, target_folder, "*", filename)
+    
+    # Debug print to help user troubleshoot mapping
+    # print(f"Audio Dictionary searching in: {search_pattern}") 
+
     candidates = glob.glob(search_pattern)
     
     if not candidates:
