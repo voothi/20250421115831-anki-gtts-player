@@ -1,6 +1,11 @@
 {
     "audio_dictionary_enabled": true,
     "audio_dictionary_path": "U:/20240124233825 Dict Ru-Board Forvo",
+    "audio_dictionary_lang_map": {
+        "de_DE": "de",
+        "en_US": "en",
+        "en_GB": "en"
+    },
     "audio_dictionary_exclusions": [
         "voothi"
     ],
