@@ -9,6 +9,8 @@
     "audio_dictionary_exclusions": [
         "AnaAna"
     ],
+    "audio_dictionary_cycle_enabled": true,
+    "audio_dictionary_cycle_limit": 2,
     "tts_engine": "gTTS",
     "persistent_cache_enabled": true,
     "persistent_cache_path": "",
