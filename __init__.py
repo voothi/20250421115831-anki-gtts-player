@@ -1,4 +1,3 @@
-# __init__.py
 # Copyright: Ankitects Pty Ltd and contributors
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
@@ -372,19 +371,20 @@ class GTTSPlayer(TTSProcessPlayer):
         elif not enable_gtts_logic and enable_piper_logic:
             current_engine = "Piper"
 
-        # -- Execution --
+        # -- Execution with Cross-Failover --
         if current_engine == "Piper":
+            # Target: Piper -> Fallback: gTTS
             if not try_piper():
-                print("Piper failed.")
-                # Note: If cycling is ON and Piper fails, we don't auto-fallback to gTTS here
-                # to strictly respect the "I want to hear Piper" state.
+                print("Piper failed. Attempting fallback to gTTS...")
+                if not try_gtts():
+                    print("Both Piper and gTTS failed or are disabled.")
         else:
-            # gTTS (Default with Fallback)
+            # Target: gTTS -> Fallback: Piper
             if not try_gtts():
                 if enable_gtts_logic:
                     print("gTTS failed/timeout, falling back to Piper...")
                 else:
-                    print("gTTS skipped, falling back to Piper...")
+                    print("gTTS disabled, falling back to Piper...")
                 
                 if not try_piper():
                     print("Fallback to Piper also failed.")
