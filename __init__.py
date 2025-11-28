@@ -1,3 +1,4 @@
+# __init__.py
 # Copyright: Ankitects Pty Ltd and contributors
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
@@ -25,9 +26,13 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "vendor"))
 from gtts import gTTS, gTTSError
 from gtts.lang import tts_langs
 
-# --- Global In-Memory Cache for Audio Dictionary State ---
-# Structure: { ("Text", "lang"): { "files": ["path1", "path2"], "next_idx": 0 } }
+# --- Global In-Memory Caches ---
+
+# For Audio Dictionary: { ("Text", "lang"): { "files": [...], "next_idx": 0 } }
 AUDIO_LOOKUP_CACHE: Dict[tuple, Dict[str, Any]] = {}
+
+# For TTS Cycling: { ("Text", "lang"): "NextEngineString" }
+TTS_CYCLE_STATE: Dict[tuple, str] = {}
 
 CONFIG = mw.addonManager.getConfig(__name__)
 
@@ -44,17 +49,15 @@ def sanitize_filename(text: str) -> str:
 def find_in_audio_dictionary(text: str, lang: str) -> Optional[str]:
     """
     Searches for audio files locally.
-    Implements in-memory caching to remember found files and cycling logic
-    to rotate through authors on repeated plays.
+    Implements in-memory caching and cycling logic.
     """
     conf = get_config()
     if not conf.get("audio_dictionary_enabled", False):
         return None
 
-    # Cache key based on input arguments
     cache_key = (text, lang)
 
-    # If this word hasn't been looked up this session, search the disk
+    # 1. Populate Cache if missing
     if cache_key not in AUDIO_LOOKUP_CACHE:
         root_path = conf.get("audio_dictionary_path", "").strip()
         if not root_path or not os.path.exists(root_path):
@@ -63,7 +66,6 @@ def find_in_audio_dictionary(text: str, lang: str) -> Optional[str]:
         exclusions = conf.get("audio_dictionary_exclusions", [])
         lang_map = conf.get("audio_dictionary_lang_map", {})
 
-        # 1. Resolve Language Folder
         default_short = lang.split('_')[0] if '_' in lang else lang
         target_folder = default_short 
         
@@ -72,53 +74,40 @@ def find_in_audio_dictionary(text: str, lang: str) -> Optional[str]:
         elif default_short in lang_map:
             target_folder = lang_map[default_short]
 
-        # 2. Prepare Search
         clean_name = sanitize_filename(text)
         filename = f"{clean_name}.mp3"
         search_pattern = os.path.join(root_path, target_folder, "*", filename)
         
-        # 3. Glob and Filter
-        # Use glob to find all candidates
         candidates = glob.glob(search_pattern)
         
         valid_candidates = []
         if candidates:
-            # Sort candidates to ensure deterministic order (e.g., by author folder name)
             candidates.sort()
-            
             for path in candidates:
-                # Check exclusions
                 if exclusions and any(ex in path for ex in exclusions):
                     continue
-                # Check file validity
                 if os.path.exists(path) and os.path.getsize(path) > 0:
                     valid_candidates.append(path)
 
-        # 4. Save to Memory Cache (even if empty, to avoid re-globbing)
         AUDIO_LOOKUP_CACHE[cache_key] = {
             "files": valid_candidates,
             "next_idx": 0
         }
 
-    # --- Retrieval from Memory ---
+    # 2. Retrieve from Cache
     cache_data = AUDIO_LOOKUP_CACHE[cache_key]
     files = cache_data["files"]
 
     if not files:
         return None
 
-    # --- Cycling Logic ---
+    # 3. Cycle Logic
     cycle_enabled = conf.get("audio_dictionary_cycle_enabled", False)
-    # Default limit 2, minimum 1
     cycle_limit = max(1, conf.get("audio_dictionary_cycle_limit", 2))
     
-    # How many files are actually available to cycle through?
-    # We take the minimum of: Available Files vs Configured Limit
     effective_count = min(len(files), cycle_limit)
-
     current_idx = cache_data["next_idx"]
 
-    # Safety check: if config changed and limit decreased, reset index
     if current_idx >= effective_count:
         current_idx = 0
 
@@ -126,12 +115,9 @@ def find_in_audio_dictionary(text: str, lang: str) -> Optional[str]:
     
     print(f"Audio Dictionary: Playing file {current_idx + 1}/{effective_count}: {selected_file}")
 
-    # Calculate next index
     if cycle_enabled and effective_count > 1:
-        # Cycle: 0 -> 1 -> ... -> (Limit-1) -> 0
         cache_data["next_idx"] = (current_idx + 1) % effective_count
     else:
-        # Reset to 0 just in case setting changed
         cache_data["next_idx"] = 0
 
     return selected_file
@@ -278,8 +264,8 @@ class GTTSPlayer(TTSProcessPlayer):
             return
 
         conf = get_config()
-        engine = conf.get("tts_engine", "gTTS")
         
+        # --- PATH DETERMINATION ---
         persistent_enabled = conf.get("persistent_cache_enabled", False)
         custom_path = conf.get("persistent_cache_path", "").strip()
         
@@ -312,33 +298,31 @@ class GTTSPlayer(TTSProcessPlayer):
 
         self._tmpfile = None
 
-        # Priority 1: Local Audio Dictionary
+        # --- PRIORITY 1: LOCAL AUDIO DICTIONARY ---
         dict_file = find_in_audio_dictionary(tag.field_text, voice.gtts_lang)
         if dict_file:
             self._tmpfile = dict_file
             return
 
-        # Priority 2 & 3: gTTS and Piper
+        # --- PRIORITY 2 & 3: TTS LOGIC (gTTS / Piper) ---
         gtts_cache_enabled = conf.get("gtts_cache_enabled", True)
         piper_cache_enabled = conf.get("piper_cache_enabled", False)
         
         enable_gtts_logic = conf.get("gtts_enabled", True)
         enable_piper_logic = conf.get("piper_enabled", True)
 
+        # -- Helpers --
         def try_gtts():
-            if not enable_gtts_logic:
-                return False
-
+            if not enable_gtts_logic: return False
+            # Check cache
             if gtts_cache_enabled and os.path.exists(gtts_cache_file):
                 if os.path.getsize(gtts_cache_file) > 0:
                     self._tmpfile = gtts_cache_file
                     return True
                 else:
-                    try:
-                        os.remove(gtts_cache_file)
-                    except OSError:
-                        pass
-            
+                    try: os.remove(gtts_cache_file)
+                    except: pass
+            # Download
             slow = tag.speed < 1
             if run_gtts_with_timeout(tag.field_text, voice.gtts_lang, slow, gtts_cache_file):
                 self._tmpfile = gtts_cache_file
@@ -346,37 +330,64 @@ class GTTSPlayer(TTSProcessPlayer):
             return False
         
         def try_piper():
-            if not enable_piper_logic:
-                return False
-
+            if not enable_piper_logic: return False
+            # Check cache
             if piper_cache_enabled and os.path.exists(piper_cache_file):
                 if os.path.getsize(piper_cache_file) > 0:
-                    print(f"Using existing Piper cache: {piper_cache_file}")
                     self._tmpfile = piper_cache_file
                     return True
                 else:
-                    try:
-                        os.remove(piper_cache_file)
-                    except OSError:
-                        pass
-
+                    try: os.remove(piper_cache_file)
+                    except: pass
+            # Generate
             if run_piper_tts(tag.field_text, voice.lang, piper_cache_file):
                 self._tmpfile = piper_cache_file
                 return True
             return False
 
-        if engine == "Piper":
+        # -- Engine Selection (Standard vs Cycling) --
+        default_engine = conf.get("tts_engine", "gTTS")
+        cycle_tts = conf.get("tts_cycle_enabled", False)
+        
+        current_engine = default_engine
+        
+        # Determine engine if cycling is requested and both engines are enabled
+        if cycle_tts and enable_gtts_logic and enable_piper_logic:
+            cache_key = (tag.field_text, voice.gtts_lang)
+            
+            # Get state from memory or default
+            if cache_key in TTS_CYCLE_STATE:
+                current_engine = TTS_CYCLE_STATE[cache_key]
+            else:
+                current_engine = default_engine
+            
+            # Toggle state for NEXT time
+            next_engine_val = "Piper" if current_engine == "gTTS" else "gTTS"
+            TTS_CYCLE_STATE[cache_key] = next_engine_val
+            
+            print(f"TTS Cycle: Selected {current_engine}, next will be {next_engine_val}")
+            
+        elif enable_gtts_logic and not enable_piper_logic:
+            current_engine = "gTTS"
+        elif not enable_gtts_logic and enable_piper_logic:
+            current_engine = "Piper"
+
+        # -- Execution --
+        if current_engine == "Piper":
             if not try_piper():
-                print("Piper failed or disabled.")
+                print("Piper failed.")
+                # Note: If cycling is ON and Piper fails, we don't auto-fallback to gTTS here
+                # to strictly respect the "I want to hear Piper" state.
         else:
+            # gTTS (Default with Fallback)
             if not try_gtts():
                 if enable_gtts_logic:
-                    print("gTTS failed or timed out, falling back to Piper...")
+                    print("gTTS failed/timeout, falling back to Piper...")
                 else:
-                    print("gTTS disabled by config, skipping to Piper...")
+                    print("gTTS skipped, falling back to Piper...")
                 
                 if not try_piper():
-                    print("Fallback to Piper also failed or disabled.")
+                    print("Fallback to Piper also failed.")
     
     def _on_done(self, ret: Future, cb: OnDoneCallback) -> None:
         if not hasattr(self, "_tmpfile") or not self._tmpfile:
