@@ -5,10 +5,12 @@ import os
 import sys
 import subprocess
 import threading
+import glob
+import re
 from pathlib import Path
 from concurrent.futures import Future
 from dataclasses import dataclass
-from typing import List, cast
+from typing import List, cast, Optional
 
 from anki.lang import compatMap
 from anki.sound import AVTag, TTSTag
@@ -33,6 +35,62 @@ def get_config():
 def write_config(new_config):
     """Writes the new configuration."""
     mw.addonManager.writeConfig(__name__, new_config)
+
+# --- Utils ---
+def sanitize_filename(text: str) -> str:
+    """
+    Cleans text to match filesystem naming usually found in Forvo packs.
+    Removes invalid chars for Windows and lowers case.
+    Example: "Haushaltsgegenstände?" -> "haushaltsgegenstände"
+    """
+    # Remove characters invalid in Windows filenames: < > : " / \ | ? *
+    text = re.sub(r'[<>:"/\\|?*]', '', text)
+    return text.strip().lower()
+
+# --- Audio Dictionary Logic ---
+def find_in_audio_dictionary(text: str, lang: str) -> Optional[str]:
+    """
+    Searches for the audio file in the local folder structure.
+    Structure assumed: Root / Lang / Author / Word.mp3
+    """
+    conf = get_config()
+    if not conf.get("audio_dictionary_enabled", False):
+        return None
+
+    root_path = conf.get("audio_dictionary_path", "").strip()
+    if not root_path or not os.path.exists(root_path):
+        return None
+
+    exclusions = conf.get("audio_dictionary_exclusions", [])
+    
+    # Handle language codes: de_DE -> de, en_US -> en
+    lang_short = lang.split('_')[0] if '_' in lang else lang
+    
+    clean_name = sanitize_filename(text)
+    filename = f"{clean_name}.mp3"
+    
+    # Construct search pattern: U:/Dict/de/*/word.mp3
+    # Using glob to search inside any author folder
+    search_pattern = os.path.join(root_path, lang_short, "*", filename)
+    
+    # Get all matches
+    candidates = glob.glob(search_pattern)
+    
+    if not candidates:
+        return None
+
+    # Filter exclusions
+    for path in candidates:
+        # Check if any excluded string is in the path
+        if exclusions and any(ex in path for ex in exclusions):
+            continue
+        
+        # Check if file actually exists and is not size 0
+        if os.path.exists(path) and os.path.getsize(path) > 0:
+            print(f"Audio Dictionary: Found match: {path}")
+            return path
+
+    return None
 
 # --- Piper TTS Integration ---
 def run_piper_tts(text: str, lang: str, output_path: str) -> bool:
@@ -190,10 +248,6 @@ class GTTSPlayer(TTSProcessPlayer):
         conf = get_config()
         engine = conf.get("tts_engine", "gTTS")
         
-        # Configuration flags
-        gtts_cache_enabled = conf.get("gtts_cache_enabled", True)  # Default True
-        piper_cache_enabled = conf.get("piper_cache_enabled", False)
-        
         # --- PATH DETERMINATION LOGIC ---
         persistent_enabled = conf.get("persistent_cache_enabled", False)
         custom_path = conf.get("persistent_cache_path", "").strip()
@@ -227,6 +281,18 @@ class GTTSPlayer(TTSProcessPlayer):
 
         self._tmpfile = None
 
+        # --- PRIORITY 1: LOCAL AUDIO DICTIONARY ---
+        # No caching needed, we play directly from source if found
+        dict_file = find_in_audio_dictionary(tag.field_text, voice.gtts_lang)
+        if dict_file:
+            self._tmpfile = dict_file
+            return
+
+        # --- PRIORITY 2 & 3: gTTS and Piper (Fallback Logic) ---
+        
+        gtts_cache_enabled = conf.get("gtts_cache_enabled", True)
+        piper_cache_enabled = conf.get("piper_cache_enabled", False)
+
         def try_gtts():
             # 1. Check if cache is enabled AND valid file exists
             if gtts_cache_enabled and os.path.exists(gtts_cache_file):
@@ -234,13 +300,12 @@ class GTTSPlayer(TTSProcessPlayer):
                     self._tmpfile = gtts_cache_file
                     return True
                 else:
-                    # Invalid 0-byte file, remove it regardless of cache setting
                     try:
                         os.remove(gtts_cache_file)
                     except OSError:
                         pass
             
-            # 2. If cache is DISABLED, or file DOES NOT EXIST -> Download
+            # 2. Download
             slow = tag.speed < 1
             if run_gtts_with_timeout(tag.field_text, voice.gtts_lang, slow, gtts_cache_file):
                 self._tmpfile = gtts_cache_file
@@ -264,10 +329,13 @@ class GTTSPlayer(TTSProcessPlayer):
                 return True
             return False
 
+        # Execution based on selected engine
         if engine == "Piper":
             if not try_piper():
-                print("Piper failed. No fallback configured.")
-        else: # Default to gTTS with Piper fallback
+                # Piper failed, try gTTS as ultimate fallback? (Optional, based on user preference)
+                # Currently: Piper primary -> Fail
+                print("Piper failed.")
+        else: # Default: gTTS -> Piper
             if not try_gtts():
                 print("gTTS failed or timed out, falling back to Piper...")
                 if not try_piper():
@@ -278,7 +346,13 @@ class GTTSPlayer(TTSProcessPlayer):
             cb()
             return
         
-        ret.result()
+        # If Future is set (from threading), get result
+        if ret:
+            try:
+                ret.result()
+            except Exception as e:
+                print(f"Error in future: {e}")
+
         av_player.insert_file(self._tmpfile)
         cb()
 
