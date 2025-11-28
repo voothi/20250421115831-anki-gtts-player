@@ -1,6 +1,6 @@
-# gTTS Player with Piper Fallback & Smart Caching for Anki
+# Audio Dictionary & TTS Player with Fallback & Smart Caching for Anki
 
-An enhanced Anki add-on that provides Text-to-Speech (TTS) functionality with a seamless offline fallback, intelligent caching, and persistent storage.
+A powerful Anki audio add-on with a 3-tier playback system: prioritizes your local audio dictionary, falls back to online gTTS, and finally to offline Piper TTS.
 
 [![Version](https://img.shields.io/badge/version-v1.48.2-blue)](https://github.com/voothi/20250421115831-anki-gtts-player) 
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
@@ -20,7 +20,7 @@ This enhanced version uses a 3-tier system for audio playback: a local high-fide
 
 ## Table of Contents
 
-- [gTTS Player with Piper Fallback \& Smart Caching for Anki](#gtts-player-with-piper-fallback--smart-caching-for-anki)
+- [Audio Dictionary \& TTS Player with Fallback \& Smart Caching for Anki](#audio-dictionary--tts-player-with-fallback--smart-caching-for-anki)
   - [Table of Contents](#table-of-contents)
   - [Project Philosophy](#project-philosophy)
   - [Features](#features)
@@ -31,7 +31,6 @@ This enhanced version uses a 3-tier system for audio playback: a local high-fide
     - [Part 2: Set up the Piper TTS Backend (Optional but Recommended)](#part-2-set-up-the-piper-tts-backend-optional-but-recommended)
     - [Part 3: Finalize](#part-3-finalize)
   - [Configuration](#configuration)
-    - [Full Configuration Example](#full-configuration-example)
     - [Configuration Keys](#configuration-keys)
   - [Usage in Templates](#usage-in-templates)
     - [Basic Syntax](#basic-syntax)
